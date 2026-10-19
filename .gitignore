@@ -1,0 +1,6 @@
+*.xcodeproj
+xcuserdata/
+DerivedData/
+.DS_Store
+*.swp
+Config/Supabase.xcconfig

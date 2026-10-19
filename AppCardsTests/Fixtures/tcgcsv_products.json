@@ -1,0 +1,429 @@
+{
+ "totalItems": 163,
+ "success": true,
+ "errors": [],
+ "results": [
+  {
+   "productId": 453506,
+   "name": "Monkey.D.Luffy (003) (Parallel)",
+   "cleanName": "MonkeyDLuffy 003 Parallel",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/453506_200w.jpg",
+   "categoryId": 68,
+   "groupId": 3188,
+   "url": "https://www.tcgplayer.com/product/453506/one-piece-card-game-romance-dawn-monkeydluffy-003-parallel",
+   "modifiedOn": "2023-01-04T21:23:17.22",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": null,
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "L"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "OP01-003"
+    },
+    {
+     "name": "Description",
+     "displayName": "Description",
+     "value": "[Activate:Main] [Once Per Turn] (4) <em>(You may rest the specified number of DON!! cards in your cost area)</em>: Set up to 1 of your \"Supernova\" or \"Straw Hat Crew\" type Character cards with a cost of 5 or less as active. It gains +1000 power during this turn.\r\n<br><br>\r\n<a href=\"https://en.onepiece-cardgame.com/rules/errata_card/#group_20221111-4\">This card has been officially errata'd.</a>"
+    },
+    {
+     "name": "Color",
+     "displayName": "Color",
+     "value": "Green;Red"
+    },
+    {
+     "name": "CardType",
+     "displayName": "Card Type",
+     "value": "Leader"
+    },
+    {
+     "name": "Life",
+     "displayName": "Life",
+     "value": "4"
+    },
+    {
+     "name": "Power",
+     "displayName": "Power",
+     "value": "5000"
+    },
+    {
+     "name": "Subtypes",
+     "displayName": "Subtype(s)",
+     "value": "Straw Hat Crew;Supernovas"
+    },
+    {
+     "name": "Attribute",
+     "displayName": "Attribute",
+     "value": "Strike"
+    }
+   ]
+  },
+  {
+   "productId": 453520,
+   "name": "Perona (Box Topper)",
+   "cleanName": "Perona Box Topper",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/453520_200w.jpg",
+   "categoryId": 68,
+   "groupId": 3188,
+   "url": "https://www.tcgplayer.com/product/453520/one-piece-card-game-romance-dawn-perona-box-topper",
+   "modifiedOn": "2022-12-02T05:03:12.237",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": "2022-12-02T00:00:00",
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "UC"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "OP01-077"
+    },
+    {
+     "name": "Description",
+     "displayName": "Description",
+     "value": "[On Play] Look at 5 cards from the top of your deck and place them at the top or bottom of the deck in any order."
+    },
+    {
+     "name": "Color",
+     "displayName": "Color",
+     "value": "Blue"
+    },
+    {
+     "name": "CardType",
+     "displayName": "Card Type",
+     "value": "Character"
+    },
+    {
+     "name": "Cost",
+     "displayName": "Cost",
+     "value": "1"
+    },
+    {
+     "name": "Power",
+     "displayName": "Power",
+     "value": "2000"
+    },
+    {
+     "name": "Subtypes",
+     "displayName": "Subtype(s)",
+     "value": "Thriller Bark Pirates"
+    },
+    {
+     "name": "Counterplus",
+     "displayName": "Counter+",
+     "value": "1000"
+    },
+    {
+     "name": "Attribute",
+     "displayName": "Attribute",
+     "value": "Special"
+    }
+   ]
+  },
+  {
+   "productId": 454512,
+   "name": "Roronoa Zoro (001)",
+   "cleanName": "Roronoa Zoro 001",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/454512_200w.jpg",
+   "categoryId": 68,
+   "groupId": 3188,
+   "url": "https://www.tcgplayer.com/product/454512/one-piece-card-game-romance-dawn-roronoa-zoro-001",
+   "modifiedOn": "2022-12-02T05:03:12.237",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": "2022-12-02T00:00:00",
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "L"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "OP01-001"
+    },
+    {
+     "name": "Description",
+     "displayName": "Description",
+     "value": "[DON!! x1] [Your Turn] All of your Characters gain +1000 power."
+    },
+    {
+     "name": "Color",
+     "displayName": "Color",
+     "value": "Red"
+    },
+    {
+     "name": "CardType",
+     "displayName": "Card Type",
+     "value": "Leader"
+    },
+    {
+     "name": "Life",
+     "displayName": "Life",
+     "value": "5"
+    },
+    {
+     "name": "Power",
+     "displayName": "Power",
+     "value": "5000"
+    },
+    {
+     "name": "Subtypes",
+     "displayName": "Subtype(s)",
+     "value": "Straw Hat Crew;Supernovas"
+    },
+    {
+     "name": "Attribute",
+     "displayName": "Attribute",
+     "value": "Slash"
+    }
+   ]
+  },
+  {
+   "productId": 454513,
+   "name": "Roronoa Zoro (001) (Parallel)",
+   "cleanName": "Roronoa Zoro 001 Parallel",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/454513_200w.jpg",
+   "categoryId": 68,
+   "groupId": 3188,
+   "url": "https://www.tcgplayer.com/product/454513/one-piece-card-game-romance-dawn-roronoa-zoro-001-parallel",
+   "modifiedOn": "2022-12-02T05:03:12.237",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": "2022-12-02T00:00:00",
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "L"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "OP01-001"
+    },
+    {
+     "name": "Description",
+     "displayName": "Description",
+     "value": "[DON!! x1] [Your Turn] All of your Characters gain +1000 power."
+    },
+    {
+     "name": "Color",
+     "displayName": "Color",
+     "value": "Red"
+    },
+    {
+     "name": "CardType",
+     "displayName": "Card Type",
+     "value": "Leader"
+    },
+    {
+     "name": "Life",
+     "displayName": "Life",
+     "value": "5"
+    },
+    {
+     "name": "Power",
+     "displayName": "Power",
+     "value": "5000"
+    },
+    {
+     "name": "Subtypes",
+     "displayName": "Subtype(s)",
+     "value": "Straw Hat Crew;Supernovas"
+    },
+    {
+     "name": "Attribute",
+     "displayName": "Attribute",
+     "value": "Slash"
+    }
+   ]
+  },
+  {
+   "productId": 454515,
+   "name": "Monkey.D.Luffy (003)",
+   "cleanName": "MonkeyDLuffy 003",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/454515_200w.jpg",
+   "categoryId": 68,
+   "groupId": 3188,
+   "url": "https://www.tcgplayer.com/product/454515/one-piece-card-game-romance-dawn-monkeydluffy-003",
+   "modifiedOn": "2023-01-04T21:22:53.413",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": null,
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "L"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "OP01-003"
+    },
+    {
+     "name": "Description",
+     "displayName": "Description",
+     "value": "[Activate:Main] [Once Per Turn] (4) <em>(You may rest the specified number of DON!! cards in your cost area)</em>: Set up to 1 of your \"Supernova\" or \"Straw Hat Crew\" type Character cards with a cost of 5 or less as active. It gains +1000 power during this turn.\r\n<br><br>\r\n<a href=\"https://en.onepiece-cardgame.com/rules/errata_card/#group_20221111-3\">This card has been officially errata'd.</a>"
+    },
+    {
+     "name": "Color",
+     "displayName": "Color",
+     "value": "Green;Red"
+    },
+    {
+     "name": "CardType",
+     "displayName": "Card Type",
+     "value": "Leader"
+    },
+    {
+     "name": "Life",
+     "displayName": "Life",
+     "value": "4"
+    },
+    {
+     "name": "Power",
+     "displayName": "Power",
+     "value": "5000"
+    },
+    {
+     "name": "Subtypes",
+     "displayName": "Subtype(s)",
+     "value": "Straw Hat Crew;Supernovas"
+    },
+    {
+     "name": "Attribute",
+     "displayName": "Attribute",
+     "value": "Strike"
+    }
+   ]
+  },
+  {
+   "productId": 454607,
+   "name": "Perona",
+   "cleanName": "Perona",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/454607_200w.jpg",
+   "categoryId": 68,
+   "groupId": 3188,
+   "url": "https://www.tcgplayer.com/product/454607/one-piece-card-game-romance-dawn-perona",
+   "modifiedOn": "2022-12-02T05:03:12.237",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": "2022-12-02T00:00:00",
+    "note": null
+   },
+   "extendedData": [
+    {
+     "name": "Rarity",
+     "displayName": "Rarity",
+     "value": "UC"
+    },
+    {
+     "name": "Number",
+     "displayName": "Number",
+     "value": "OP01-077"
+    },
+    {
+     "name": "Description",
+     "displayName": "Description",
+     "value": "[On Play] Look at 5 cards from the top of your deck and place them at the top or bottom of the deck in any order."
+    },
+    {
+     "name": "Color",
+     "displayName": "Color",
+     "value": "Blue"
+    },
+    {
+     "name": "CardType",
+     "displayName": "Card Type",
+     "value": "Character"
+    },
+    {
+     "name": "Cost",
+     "displayName": "Cost",
+     "value": "1"
+    },
+    {
+     "name": "Power",
+     "displayName": "Power",
+     "value": "2000"
+    },
+    {
+     "name": "Subtypes",
+     "displayName": "Subtype(s)",
+     "value": "Thriller Bark Pirates"
+    },
+    {
+     "name": "Counterplus",
+     "displayName": "Counter+",
+     "value": "1000"
+    },
+    {
+     "name": "Attribute",
+     "displayName": "Attribute",
+     "value": "Special"
+    }
+   ]
+  },
+  {
+   "productId": 450085,
+   "name": "Romance Dawn - Booster Pack",
+   "cleanName": "Romance Dawn Booster Pack",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/450085_200w.jpg",
+   "categoryId": 68,
+   "groupId": 3188,
+   "url": "https://www.tcgplayer.com/product/450085/one-piece-card-game-romance-dawn-romance-dawn-booster-pack",
+   "modifiedOn": "2023-12-15T14:52:18.553",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": null,
+    "note": null
+   },
+   "extendedData": []
+  },
+  {
+   "productId": 450086,
+   "name": "Romance Dawn - Booster Box (Wave 1 - Blue)",
+   "cleanName": "Romance Dawn Booster Box Wave 1 Blue",
+   "imageUrl": "https://tcgplayer-cdn.tcgplayer.com/product/450086_200w.jpg",
+   "categoryId": 68,
+   "groupId": 3188,
+   "url": "https://www.tcgplayer.com/product/450086/one-piece-card-game-romance-dawn-romance-dawn-booster-box-wave-1-blue",
+   "modifiedOn": "2024-06-28T20:30:29.883",
+   "imageCount": 1,
+   "presaleInfo": {
+    "isPresale": false,
+    "releasedOn": null,
+    "note": null
+   },
+   "extendedData": []
+  }
+ ]
+}
