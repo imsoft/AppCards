@@ -29,3 +29,16 @@ struct DeckColorsTests {
         #expect(DeckColors.foreground([.white, Color(hex: "#F2A623")!]) != .white)
     }
 }
+
+struct PrintingStyleTests {
+    @Test func recognizesOnePieceSpecialPrintings() {
+        #expect(PrintingStyle.label(for: "Buggy (Alternate Art)") == "Arte alterno")
+        #expect(PrintingStyle.label(for: "Buggy (042) (Parallel)") == "Paralela")
+        #expect(PrintingStyle.label(for: "Buggy (051) (Manga)") == "Manga")
+        #expect(PrintingStyle.label(for: "Buggy (SP)") == "SP")
+        #expect(PrintingStyle.label(for: "Buggy - OP09-051 (SP) (Gold)") == "SP")
+        #expect(PrintingStyle.label(for: "Buggy (051) (Wanted Poster)") == "Wanted")
+        #expect(PrintingStyle.label(for: "Buggy") == nil)
+        #expect(PrintingStyle.label(for: "Buggy (008)") == nil)
+    }
+}

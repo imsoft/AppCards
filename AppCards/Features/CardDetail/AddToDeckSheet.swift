@@ -15,7 +15,8 @@ struct AddToDeckSheet: View {
     @State private var asAlternative = false
     @State private var note = ""
     @State private var replacesTarget: PersistentIdentifier?
-    @State private var useCheapest = true
+    /// Por defecto se respeta la impresión que elegiste (arte normal, alterno, paralela…).
+    @State private var useCheapest = false
     @State private var quoteID: String
     @State private var cheapest: (detail: CardDetail, quote: PriceQuote)?
     @State private var isLoadingCheapest = false
@@ -72,20 +73,32 @@ struct AddToDeckSheet: View {
                 }
 
                 Section {
-                    Toggle("Usar la impresión más barata", isOn: $useCheapest)
-                    if useCheapest {
-                        if isLoadingCheapest {
-                            HStack { Text("Buscando reimpresiones…"); Spacer(); ProgressView() }
-                        } else if let cheapest {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(cheapest.detail.summary.setLine).font(.subheadline)
-                                Text("\(cheapest.quote.title) · \(MoneyFormatter.string(cheapest.quote.reference ?? 0, currency: cheapest.quote.currency))")
-                                    .font(.footnote).foregroundStyle(.secondary)
+                    HStack(spacing: 12) {
+                        CardThumbnail(url: chosen.summary.imageURL ?? chosen.summary.thumbnailURL, width: 44)
+                        VStack(alignment: .leading, spacing: 3) {
+                            HStack(spacing: 6) {
+                                Text(chosen.summary.name).font(.subheadline.weight(.semibold)).lineLimit(2)
+                                PrintingStyleChip(name: chosen.summary.name)
                             }
-                        } else {
-                            Text("No hay precios para ninguna impresión.").foregroundStyle(.secondary)
+                            Text(chosen.summary.setLine).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                            if let quote = chosen.quote {
+                                UnitPriceText(unit: quote.reference, currency: quote.currency)
+                            }
                         }
-                    } else {
+                    }
+                    if isLoadingCheapest {
+                        HStack { Text("Buscando otras impresiones…").foregroundStyle(.secondary); Spacer(); ProgressView() }
+                    } else if let cheapest, cheapest.detail.summary.id != detail.summary.id {
+                        Toggle(isOn: $useCheapest.animation()) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Usar la impresión más barata")
+                                Text("\(cheapest.detail.summary.name) · \(cheapest.detail.summary.setLine)")
+                                    .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                if let savings { Text("Ahorras \(savings) por copia").font(.caption.weight(.semibold)).foregroundStyle(Theme.positive) }
+                            }
+                        }
+                    }
+                    if !useCheapest, detail.pricedQuotes.count > 1 {
                         Picker("Precio", selection: $quoteID) {
                             ForEach(detail.pricedQuotes) { quote in
                                 Text("\(quote.title) · \(MoneyFormatter.string(quote.reference ?? 0, currency: quote.currency))")
@@ -93,11 +106,9 @@ struct AddToDeckSheet: View {
                             }
                             Text("Sin precio").tag("")
                         }
-                        .pickerStyle(.inline)
-                        .labelsHidden()
                     }
                 } header: {
-                    Text("Precio a usar")
+                    Text("Impresión")
                 } footer: {
                     if let quote = chosen.quote, let reference = quote.reference {
                         Text("Subtotal: \(model.display(reference * Double(quantity), currency: quote.currency))")
@@ -120,6 +131,15 @@ struct AddToDeckSheet: View {
             .task { await loadCheapest() }
         }
         .sheetSize()
+    }
+
+    /// Cuánto ahorras por copia con la impresión más barata, en tu moneda.
+    private var savings: String? {
+        guard let cheapest, let cheap = cheapest.quote.reference,
+              let current = detail.quote(id: quoteID)?.reference ?? detail.cheapestQuote()?.reference,
+              let a = model.converted(current, from: detail.quote(id: quoteID)?.currency ?? "USD"),
+              let b = model.converted(cheap, from: cheapest.quote.currency), a - b > 0.005 else { return nil }
+        return MoneyFormatter.string(a - b, currency: model.displayCurrency)
     }
 
     private func loadCheapest() async {

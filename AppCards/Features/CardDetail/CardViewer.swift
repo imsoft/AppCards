@@ -34,6 +34,7 @@ struct CardViewer: View {
     let url: URL?
     let title: String
     var color: Color = .vaultBlue
+    var fallback: ArtworkFallback? = nil
     let onClose: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -122,7 +123,7 @@ struct CardViewer: View {
 
     private func card(width: CGFloat, tilt: (x: Double, y: Double)) -> some View {
         let shape = RoundedRectangle(cornerRadius: width * 0.045, style: .continuous)
-        return AsyncImage(url: url) { phase in
+        return CachedAsyncImage(url: url, fallback: fallback) { phase in
             if let image = phase.image {
                 image.resizable().interpolation(.high).antialiased(true).scaledToFit()
             } else {

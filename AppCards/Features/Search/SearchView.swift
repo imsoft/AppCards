@@ -185,7 +185,7 @@ struct CardRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            CardThumbnail(url: card.thumbnailURL, width: 44)
+            CardThumbnail(url: card.thumbnailURL, width: 44, fallback: ArtworkFallback(card))
             VStack(alignment: .leading, spacing: 2) {
                 Text(card.name)
                     .font(.body.weight(.medium))
@@ -212,28 +212,20 @@ struct CardRow: View {
 struct CardThumbnail: View {
     let url: URL?
     var width: CGFloat = 44
+    var fallback: ArtworkFallback? = nil
 
     var body: some View {
-        AsyncImage(url: ImageQuality.best(url, size: .grid)) { phase in
+        CachedAsyncImage(url: ImageQuality.best(url, size: .grid), fallback: fallback) { phase in
             switch phase {
             case .success(let image):
                 image.resizable().interpolation(.high).antialiased(true).scaledToFit()
             case .failure:
-                placeholder(symbol: "photo")
+                MissingArtwork(compact: true)
             default:
-                placeholder(symbol: nil)
+                RoundedRectangle(cornerRadius: 4).fill(.quaternary)
             }
         }
         .frame(width: width, height: width * 1.4)
         .clipShape(RoundedRectangle(cornerRadius: 4))
-    }
-
-    private func placeholder(symbol: String?) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 4).fill(.quaternary)
-            if let symbol {
-                Image(systemName: symbol).foregroundStyle(.secondary)
-            }
-        }
     }
 }

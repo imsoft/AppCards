@@ -34,13 +34,14 @@ struct CardGridTile: View {
                 Color.clear
                     .aspectRatio(0.716, contentMode: .fit)
                     .overlay {
-                        AsyncImage(url: ImageQuality.best(card.thumbnailURL ?? card.imageURL, size: .grid)) { phase in
-                            if let image = phase.image {
+                        CachedAsyncImage(url: ImageQuality.best(card.thumbnailURL ?? card.imageURL, size: .grid), fallback: ArtworkFallback(card)) { phase in
+                            switch phase {
+                            case .success(let image):
                                 image.resizable().interpolation(.high).antialiased(true).scaledToFit()
-                            } else {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(.quaternary)
-                                    .overlay { Image(systemName: "photo").foregroundStyle(.secondary) }
+                            case .failure:
+                                MissingArtwork(name: card.name, number: card.number, color: card.game.color)
+                            default:
+                                RoundedRectangle(cornerRadius: 10).fill(.quaternary).overlay { ProgressView() }
                             }
                         }
                     }

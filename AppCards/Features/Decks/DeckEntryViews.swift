@@ -45,7 +45,11 @@ struct DeckEntryRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
-            CardImageButton(url: entry.imageURL, title: entry.name, color: color, width: 54)
+            CardImageButton(url: entry.imageURL, title: entry.name, color: color, width: 54, fallback: entry.artworkFallback)
+                .overlay(alignment: .topLeading) {
+                    CopiesBadge(count: entry.quantity, color: color)
+                        .offset(x: -8, y: -8)
+                }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(entry.name)
@@ -55,6 +59,7 @@ struct DeckEntryRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                PrintingStyleChip(name: entry.name)
                 if let target = DeckSubstitution.target(of: entry, in: entry.deck?.entryList ?? []) {
                     SubstitutionSummary(option: entry, target: target, compact: true)
                 } else if !entry.isAlternative, !DeckSubstitution.substitutes(for: entry, in: entry.deck?.entryList ?? []).isEmpty {
@@ -73,11 +78,7 @@ struct DeckEntryRow: View {
 
             Spacer(minLength: 4)
 
-            if entry.isAlternative {
-                Text("×\(entry.quantity)")
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.secondary)
-            } else {
+            if !entry.isAlternative {
                 counter
             }
         }
@@ -138,10 +139,13 @@ struct DeckEntryTile: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            AsyncImage(url: entry.imageURL) { phase in
-                if let image = phase.image {
+            CachedAsyncImage(url: entry.imageURL, fallback: entry.artworkFallback) { phase in
+                switch phase {
+                case .success(let image):
                     image.resizable().interpolation(.high).scaledToFit()
-                } else {
+                case .failure:
+                    MissingArtwork(name: entry.name, number: entry.number, color: color).aspectRatio(0.716, contentMode: .fit)
+                default:
                     RoundedRectangle(cornerRadius: 8).fill(.quaternary).aspectRatio(0.716, contentMode: .fit)
                 }
             }
@@ -149,14 +153,21 @@ struct DeckEntryTile: View {
             .opacity(entry.missingQuantity == 0 && !entry.isAlternative ? 1 : 0.92)
             .shadow(color: color.opacity(0.3), radius: 5, y: 3)
             .overlay(alignment: .topTrailing) {
-                OwnershipRing(owned: entry.ownedQuantity, wanted: entry.quantity, color: color, size: 30)
-                    .padding(4)
-                    .background(.regularMaterial, in: Circle())
-                    .padding(4)
+                if !entry.isAlternative {
+                    OwnershipRing(owned: entry.ownedQuantity, wanted: entry.quantity, color: color, size: 30)
+                        .padding(4)
+                        .background(.regularMaterial, in: Circle())
+                        .padding(4)
+                }
+            }
+            .overlay(alignment: .topLeading) {
+                CopiesBadge(count: entry.quantity, color: color, large: true)
+                    .padding(6)
             }
             Text(entry.name)
                 .font(.caption.weight(.semibold))
                 .lineLimit(1)
+            PrintingStyleChip(name: entry.name)
             if let unit = entry.unitPrice, entry.missingQuantity > 0 {
                 PriceLabel(amount: unit * Double(entry.missingQuantity), currency: entry.currency, style: .compact, alignment: .leading)
                     .scaleEffect(0.9, anchor: .leading)
@@ -205,17 +216,24 @@ struct DeckEntryEditSheet: View {
             Form {
                 Section {
                     HStack(alignment: .top, spacing: 16) {
-                        CardImageButton(url: entry.fullImageURL, title: entry.name, color: color, width: 88)
+                        CardImageButton(url: entry.fullImageURL, title: entry.name, color: color, width: 88, fallback: entry.artworkFallback)
                         VStack(alignment: .leading, spacing: 6) {
                             Text(entry.name).font(.system(.title3, design: .rounded).weight(.bold))
                             Text(entry.setLine).font(.subheadline).foregroundStyle(.secondary)
                             Text(entry.variantTitle).font(.caption).foregroundStyle(.tertiary)
+                            PrintingStyleChip(name: entry.name)
                             if let unit = entry.unitPrice {
                                 PriceLabel(amount: unit, currency: entry.currency, style: .compact, updatedAt: entry.priceUpdatedAt, alignment: .leading)
                             }
                         }
                     }
                     .padding(.vertical, 4)
+                    NavigationLink {
+                        PrintingChoiceList(entry: entry)
+                    } label: {
+                        Label(entry.quantity > 1 ? "Cambiar o separar impresión" : "Cambiar impresión", systemImage: "rectangle.on.rectangle.angled")
+                    }
+                    .accessibilityIdentifier("change-printing")
                 }
 
                 if let target = DeckSubstitution.target(of: entry, in: allEntries) {
@@ -551,5 +569,166 @@ struct SubstituteTargetList: View {
         .searchable(text: $query, prompt: "Buscar en el deck")
         .navigationTitle("Sustituye a")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Cuántas copias de la carta lleva el deck: "×4".
+struct CopiesBadge: View {
+    let count: Int
+    var color: Color
+    var large = false
+
+    var body: some View {
+        Text("×\(count)")
+            .font(.system(large ? .subheadline : .caption, design: .rounded).weight(.heavy))
+            .monospacedDigit()
+            .contentTransition(.numericText())
+            .padding(.horizontal, large ? 8 : 6)
+            .padding(.vertical, large ? 3 : 2)
+            .background(color, in: Capsule())
+            .foregroundStyle(color.readableForeground)
+            .overlay(Capsule().strokeBorder(Color(.secondarySystemGroupedBackground), lineWidth: 1.5))
+            .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
+            .animation(Motion.snappy, value: count)
+            .accessibilityLabel("\(count) \(count == 1 ? "copia" : "copias") en el deck")
+    }
+}
+
+/// Etiqueta para distinguir impresiones especiales por su nombre: "Arte alterno", "Paralela", "Manga"…
+enum PrintingStyle {
+    static func label(for name: String) -> String? {
+        let lower = name.lowercased()
+        let rules: [(String, String)] = [
+            ("manga", "Manga"),
+            ("alternate art", "Arte alterno"),
+            ("alt art", "Arte alterno"),
+            ("parallel", "Paralela"),
+            ("wanted poster", "Wanted"),
+            ("(sp)", "SP"),
+            ("pirate foil", "Pirate foil"),
+            ("(gold)", "Dorada"),
+            ("box topper", "Box topper"),
+            ("full art", "Full art"),
+            ("treasure", "Treasure"),
+        ]
+        return rules.first { lower.contains($0.0) }?.1
+    }
+}
+
+struct PrintingStyleChip: View {
+    let name: String
+
+    var body: some View {
+        if let label = PrintingStyle.label(for: name) {
+            Text(label)
+                .font(.caption2.weight(.bold))
+                .padding(.horizontal, 6).padding(.vertical, 2)
+                .background(LinearGradient(colors: [.orange, .pink], startPoint: .leading, endPoint: .trailing), in: Capsule())
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .fixedSize()
+        }
+    }
+}
+
+/// Elegir otra impresión para una carta del deck (por ejemplo, el arte alterno).
+/// Si hay varias copias, se puede cambiar solo una para separar artes distintos.
+struct PrintingChoiceList: View {
+    @Bindable var entry: DeckEntry
+    @Environment(AppModel.self) private var model
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    @State private var printings: [CardDetail] = []
+    @State private var isLoading = true
+    @State private var errorMessage: String?
+    @State private var pending: CardDetail?
+
+    var body: some View {
+        List {
+            if isLoading {
+                HStack { ProgressView(); Text("Buscando impresiones…").foregroundStyle(.secondary) }
+            } else if let errorMessage {
+                Text(errorMessage).foregroundStyle(Theme.negative)
+            } else if printings.count <= 1 {
+                Text("Esta carta solo tiene una impresión.").foregroundStyle(.secondary)
+            }
+            ForEach(printings, id: \.summary.id) { printing in
+                Button {
+                    choose(printing)
+                } label: {
+                    HStack(spacing: 12) {
+                        CardThumbnail(url: printing.summary.imageURL ?? printing.summary.thumbnailURL, width: 48)
+                        VStack(alignment: .leading, spacing: 3) {
+                            HStack(spacing: 6) {
+                                Text(printing.summary.name).font(.subheadline.weight(.semibold)).lineLimit(2)
+                                PrintingStyleChip(name: printing.summary.name)
+                            }
+                            Text(printing.summary.setLine).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                            let quote = printing.cheapestQuote()
+                            UnitPriceText(unit: quote?.reference, currency: quote?.currency ?? "USD")
+                        }
+                        Spacer()
+                        if printing.summary.id == entry.cardID {
+                            Image(systemName: "checkmark.circle.fill").foregroundStyle(.tint)
+                        }
+                    }
+                }
+                .foregroundStyle(.primary)
+                .disabled(printing.summary.id == entry.cardID)
+                .accessibilityIdentifier("printing-option")
+            }
+        }
+        .navigationTitle("Impresión")
+        .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog("¿Cambiar cuántas copias?", isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }), titleVisibility: .visible) {
+            if let pending {
+                Button("Solo 1 copia (separar)") { apply(pending, onlyOne: true) }
+                Button("Las \(entry.quantity) copias") { apply(pending, onlyOne: false) }
+            }
+        } message: {
+            Text("Con \"Solo 1 copia\" el deck tendrá las dos impresiones por separado, por ejemplo una normal y una de arte alterno.")
+        }
+        .task { await load() }
+    }
+
+    private func load() async {
+        defer { isLoading = false }
+        do {
+            let provider = model.provider(for: entry.game)
+            let current = try await provider.detail(providerID: entry.providerID)
+            let all = try await provider.printings(of: current)
+            printings = all.isEmpty ? [current] : all.sorted {
+                ($0.summary.id == entry.cardID ? 0 : 1, $0.summary.setName) < ($1.summary.id == entry.cardID ? 0 : 1, $1.summary.setName)
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func choose(_ printing: CardDetail) {
+        if entry.quantity > 1 { pending = printing } else { apply(printing, onlyOne: false) }
+    }
+
+    private func apply(_ printing: CardDetail, onlyOne: Bool) {
+        let quote = printing.cheapestQuote() ?? PriceQuote(source: .tcgplayer, variant: "Normal", currency: "USD", market: nil, low: nil, mid: nil, high: nil)
+        if onlyOne, let deck = entry.deck {
+            entry.quantity -= 1
+            entry.ownedQuantity = min(entry.ownedQuantity, entry.quantity)
+            if let existing = deck.entryList.first(where: { $0.cardID == printing.summary.id && $0.isAlternative == entry.isAlternative }) {
+                existing.quantity += 1
+            } else {
+                let split = DeckEntry(card: printing.summary, quantity: 1, quote: quote)
+                split.isAlternative = entry.isAlternative
+                context.insert(split)
+                split.deck = deck
+            }
+            model.showToast("Separaste 1 copia: \(printing.summary.name)")
+        } else {
+            entry.apply(summary: printing.summary, quote: quote)
+            model.showToast("Cambiaste a \(printing.summary.name)")
+        }
+        try? context.save()
+        pending = nil
+        dismiss()
     }
 }

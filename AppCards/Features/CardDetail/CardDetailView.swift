@@ -84,7 +84,7 @@ struct CardDetailView: View {
             if let detail { WishlistTargetSheet(detail: detail) }
         }
         .fullScreenCover(isPresented: $showZoom) {
-            CardViewer(url: ImageQuality.best(card.imageURL ?? card.thumbnailURL, size: .full), title: card.name, color: card.game.color) {
+            CardViewer(url: ImageQuality.best(card.imageURL ?? card.thumbnailURL, size: .full), title: card.name, color: card.game.color, fallback: ArtworkFallback(card)) {
                 showZoom = false
             }
         }
@@ -128,7 +128,7 @@ struct CardDetailView: View {
         // Todo el bloque es un botón: siempre recibe el toque, con imagen cargada o no.
         Button(action: openViewer) {
             ZStack(alignment: .bottomTrailing) {
-                AsyncImage(url: ImageQuality.best(card.imageURL ?? card.thumbnailURL, size: .full)) { phase in
+                CachedAsyncImage(url: ImageQuality.best(card.imageURL ?? card.thumbnailURL, size: .full), fallback: ArtworkFallback(card)) { phase in
                     if let image = phase.image {
                         image.resizable().interpolation(.high).antialiased(true).scaledToFit()
                     } else {

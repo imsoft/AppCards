@@ -164,7 +164,7 @@ struct WishlistItemView: View {
         Form {
             Section {
                 HStack(alignment: .top, spacing: 16) {
-                    CardImageButton(url: item.fullImageURL, title: item.name, color: item.game.color, width: 96)
+                    CardImageButton(url: item.fullImageURL, title: item.name, color: item.game.color, width: 96, fallback: item.artworkFallback)
                     VStack(alignment: .leading, spacing: 6) {
                         GameChip(game: item.game)
                         Text(item.name).font(.system(.title3, design: .rounded).weight(.bold))

@@ -52,3 +52,11 @@ struct TCGdexTests {
         #expect(summary.number == "136")
     }
 }
+
+struct ImageFallbackTests {
+    @Test func readsTCGplayerProductIDFromTCGdexDetail() throws {
+        let data = try Fixtures.data("tcgdex_card")
+        #expect(TCGdexImageFallback.productID(from: data) == 219333)
+        #expect(TCGdexImageFallback.productID(from: Data("{}".utf8)) == nil)
+    }
+}

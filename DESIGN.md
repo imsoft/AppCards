@@ -15,7 +15,7 @@ Reglas que toda pantalla sigue. Si una pantalla nueva necesita algo que no está
 
 - iPhone: solo vertical, pestañas abajo.
 - iPad: todas las orientaciones. Las pestañas se vuelven barra lateral (`.sidebarAdaptable`).
-- Pantallas de **lista editable** y **Colección** usan `AdaptiveSplitView`: en iPad, lista a la izquierda y detalle a la derecha; en iPhone o ventana angosta, navegación normal. Los elementos se enlazan con `ItemLink`, nunca con `NavigationLink(value:)` directo.
+- Pantallas de **lista editable** y **Colección** usan `AdaptiveSplitView`: en iPad, lista a la izquierda y detalle a la derecha; en iPhone o ventana angosta, navegación normal. En iPad son dos `NavigationStack` lado a lado, no `NavigationSplitView`: con la barra de pestañas flotante, la columna del split dejaba una franja vacía encima del título. Los elementos se enlazan con `ItemLink`, nunca con `NavigationLink(value:)` directo.
 - **Detalle de carta** en iPad: carta a la izquierda (400 pt), información a la derecha (máx. 620 pt).
 - La cuadrícula ya es adaptable: no se fija número de columnas.
 

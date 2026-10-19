@@ -53,6 +53,10 @@ final class CollectionItem {
     var imageURL: URL? { ImageQuality.best(imageURLString.flatMap { URL(string: $0) }, size: .grid) }
     var fullImageURL: URL? { ImageQuality.best(imageURLString.flatMap { URL(string: $0) }, size: .full) }
 
+    var artworkFallback: ArtworkFallback {
+        ArtworkFallback(game: game, providerID: providerID, number: number, name: name)
+    }
+
     /// Para abrir el perfil completo de la carta.
     var summary: CardSummary {
         CardSummary(game: game, providerID: providerID, name: name, setName: setName, number: number,

@@ -69,26 +69,34 @@ struct AdaptiveSplitView<Value: PersistentModel, Primary: View, Detail: View, Em
 
     var body: some View {
         if sizeClass == .regular {
-            NavigationSplitView {
-                primary()
-                    .environment(\.splitSelect, SplitSelectAction(
-                        select: { value in
-                            withAnimation(Motion.snappy) { selection = value.base as? Value }
-                        },
-                        selected: selection.map(AnyHashable.init)
-                    ))
-                    .navigationSplitViewColumnWidth(min: 360, ideal: 440, max: 560)
-            } detail: {
-                NavigationStack {
-                    if let selection, selection.modelContext != nil, !selection.isDeleted {
-                        detail(selection)
-                            .id(selection.persistentModelID)
-                    } else {
-                        empty()
+            // Dos pilas lado a lado en lugar de `NavigationSplitView`: con la barra de pestañas flotante,
+            // la columna del split dejaba una franja vacía grande encima de su título.
+            GeometryReader { proxy in
+                HStack(spacing: 0) {
+                    NavigationStack {
+                        primary()
+                            .environment(\.splitSelect, SplitSelectAction(
+                                select: { value in
+                                    withAnimation(Motion.snappy) { selection = value.base as? Value }
+                                },
+                                selected: selection.map(AnyHashable.init)
+                            ))
                     }
+                    .frame(width: min(max(proxy.size.width * 0.4, 340), 480))
+
+                    Divider().ignoresSafeArea()
+
+                    NavigationStack {
+                        if let selection, selection.modelContext != nil, !selection.isDeleted {
+                            detail(selection)
+                                .id(selection.persistentModelID)
+                        } else {
+                            empty()
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
                 }
             }
-            .navigationSplitViewStyle(.balanced)
         } else {
             NavigationStack {
                 primary()
