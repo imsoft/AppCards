@@ -104,6 +104,8 @@ struct WishlistItemPayload: Codable, Equatable, Sendable {
     var targetPrice: Double?
     var targetCurrency: String
     var addedAt: Date
+    /// Opcional para leer registros guardados antes de que existiera.
+    var quantity: Int? = nil
 }
 
 // MARK: - Modelos ↔ payloads
@@ -155,12 +157,12 @@ extension WishlistItem {
         WishlistItemPayload(cardID: cardID, providerID: providerID, gameRaw: gameRaw, canonicalKey: canonicalKey,
                             name: name, setName: setName, number: number, imageURLString: imageURLString,
                             quoteID: quoteID, variantTitle: variantTitle, targetPrice: targetPrice,
-                            targetCurrency: targetCurrency, addedAt: addedAt)
+                            targetCurrency: targetCurrency, addedAt: addedAt, quantity: quantity == 1 ? nil : quantity)
     }
     func apply(_ p: WishlistItemPayload) {
         cardID = p.cardID; providerID = p.providerID; gameRaw = p.gameRaw; canonicalKey = p.canonicalKey
         name = p.name; setName = p.setName; number = p.number; imageURLString = p.imageURLString
         quoteID = p.quoteID; variantTitle = p.variantTitle; targetPrice = p.targetPrice
-        targetCurrency = p.targetCurrency; addedAt = p.addedAt
+        targetCurrency = p.targetCurrency; addedAt = p.addedAt; quantity = max(1, p.quantity ?? 1)
     }
 }

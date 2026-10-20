@@ -37,6 +37,8 @@ final class WishlistItem {
     var imageURLString: String?
     var quoteID: String = ""
     var variantTitle: String = ""
+    /// Cuántas copias quieres de esta carta.
+    var quantity: Int = 1
 
     /// Precio objetivo en `targetCurrency` (la moneda que mostrabas al crearlo). Nil = avisar con cualquier baja.
     var targetPrice: Double?
@@ -51,7 +53,7 @@ final class WishlistItem {
 
     init(syncID: String) { self.syncID = syncID }
 
-    init(card: CardSummary, quote: PriceQuote?, targetPrice: Double?, targetCurrency: String) {
+    init(card: CardSummary, quote: PriceQuote?, targetPrice: Double?, targetCurrency: String, quantity: Int = 1) {
         self.cardID = card.id
         self.providerID = card.providerID
         self.gameRaw = card.game.rawValue
@@ -64,6 +66,7 @@ final class WishlistItem {
         self.variantTitle = quote?.title ?? ""
         self.targetPrice = targetPrice
         self.targetCurrency = targetCurrency
+        self.quantity = max(1, quantity)
         self.lastPrice = quote?.reference
         self.lastCurrency = quote?.currency ?? "USD"
         self.lastCheckedAt = quote == nil ? nil : .now

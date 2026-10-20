@@ -75,14 +75,15 @@ struct WishlistView: View {
         let statuses = items.map { PriceRefreshService.status(of: $0, converter: model.converter) }
         let reached = statuses.filter { if case .reached = $0 { return true }; if case .dropped = $0 { return true }; return false }.count
         let total = items.reduce(0.0) { sum, item in
-            sum + (item.lastPrice.flatMap { model.converted($0, from: item.lastCurrency) } ?? 0)
+            sum + (item.lastPrice.flatMap { model.converted($0, from: item.lastCurrency) } ?? 0) * Double(item.quantity)
         }
+        let copies = items.reduce(0) { $0 + $1.quantity }
         return SummaryCard(
             title: "Comprar todo lo que deseas",
             amount: total,
             currency: model.displayCurrency,
             colors: [.pink, Color.pink.opacity(0.7)],
-            pills: [("\(items.count) cartas", "heart.fill"), ("\(reached) en tu precio", "checkmark.circle.fill")]
+            pills: [("\(copies) cartas", "heart.fill"), ("\(reached) en tu precio", "checkmark.circle.fill")]
         )
     }
 
@@ -103,7 +104,18 @@ struct WishlistRow: View {
     var body: some View {
         let status = PriceRefreshService.status(of: item, converter: model.converter)
         ItemRow(imageURL: item.imageURL, name: item.name, subtitle: item.setLine) {
-            WishlistStatusLabel(status: status, item: item)
+            HStack(spacing: 6) {
+                if item.quantity > 1 {
+                    Text("×\(item.quantity)")
+                        .font(.caption.weight(.bold))
+                        .monospacedDigit()
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Color.pink.opacity(0.15), in: Capsule())
+                        .foregroundStyle(.pink)
+                        .accessibilityLabel("\(item.quantity) copias")
+                }
+                WishlistStatusLabel(status: status, item: item)
+            }
         } trailing: {
             VStack(alignment: .trailing, spacing: 4) {
                 if let price = item.lastPrice {
@@ -187,6 +199,19 @@ struct WishlistItemView: View {
                 }
             }
             Section {
+                Stepper(value: $item.quantity, in: 1...99) {
+                    LabeledContent("Quiero", value: "\(item.quantity) \(item.quantity == 1 ? "copia" : "copias")")
+                }
+                .accessibilityIdentifier("wishlist-quantity")
+                if item.quantity > 1, let price = item.lastPrice {
+                    LabeledContent("Total") {
+                        PriceLabel(amount: price * Double(item.quantity), currency: item.lastCurrency, style: .compact)
+                    }
+                }
+            } header: {
+                Text("Cantidad")
+            }
+            Section {
                 Toggle("Avisar al llegar a un precio", isOn: $hasTarget)
                 if hasTarget {
                     HStack {
@@ -227,13 +252,16 @@ struct WishlistTargetSheet: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Environment(AppModel.self) private var model
-    @State private var hasTarget = true
+    @State private var hasTarget: Bool
     @State private var target: Double = 0
+    @State private var quantity = 1
     @State private var quoteID: String
 
     init(detail: CardDetail) {
         self.detail = detail
         _quoteID = State(initialValue: detail.cheapestQuote()?.id ?? "")
+        // Sin precio no hay de dónde sugerir un objetivo; así se puede agregar igual y avisa con cualquier baja.
+        _hasTarget = State(initialValue: detail.cheapestQuote()?.reference != nil)
     }
 
     private var quote: PriceQuote? { detail.quote(id: quoteID) }
@@ -248,6 +276,16 @@ struct WishlistTargetSheet: View {
                         }
                     }
                     .pickerStyle(.inline).labelsHidden()
+                }
+                Section {
+                    Stepper(value: $quantity, in: 1...99) {
+                        LabeledContent("Quiero", value: "\(quantity) \(quantity == 1 ? "copia" : "copias")")
+                    }
+                    .accessibilityIdentifier("wishlist-quantity")
+                } header: {
+                    Text("Cantidad")
+                } footer: {
+                    Text("El precio objetivo es por copia.")
                 }
                 Section {
                     Toggle("Avisar al llegar a", isOn: $hasTarget)
@@ -285,9 +323,10 @@ struct WishlistTargetSheet: View {
         if let existing = try? context.fetch(descriptor).first {
             existing.targetPrice = hasTarget ? target : nil
             existing.targetCurrency = model.displayCurrency
+            existing.quantity = quantity
             if let quote { existing.record(quote: quote) }
         } else {
-            let item = WishlistItem(card: detail.summary, quote: quote, targetPrice: hasTarget ? target : nil, targetCurrency: model.displayCurrency)
+            let item = WishlistItem(card: detail.summary, quote: quote, targetPrice: hasTarget ? target : nil, targetCurrency: model.displayCurrency, quantity: quantity)
             context.insert(item)
         }
         try? context.save()

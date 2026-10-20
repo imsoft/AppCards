@@ -11,6 +11,7 @@ struct FilterSheet: View {
     @State private var draft: SearchFilters = .none
     @State private var priceMinText = ""
     @State private var priceMaxText = ""
+    @State private var didStart = false
 
     var body: some View {
         NavigationStack {
@@ -42,6 +43,9 @@ struct FilterSheet: View {
             .tint(game.color)
             .task { await load() }
             .onAppear {
+                // Al volver de un selector (Set, Rareza…) `onAppear` se dispara otra vez: no hay que borrar lo elegido.
+                guard !didStart else { return }
+                didStart = true
                 draft = filters
                 priceMinText = filters.priceMinUSD.flatMap(displayPrice) ?? ""
                 priceMaxText = filters.priceMaxUSD.flatMap(displayPrice) ?? ""
