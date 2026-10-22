@@ -17,6 +17,7 @@ struct DeckDetailView: View {
     @State private var newName = ""
     @State private var dropTarget: DropZone?
     @State private var confirmDelete = false
+    @State private var shareKind: DeckShareKind?
     @Environment(\.dismiss) private var dismiss
 
     /// Zona sobre la que se está arrastrando una carta.
@@ -116,6 +117,9 @@ struct DeckDetailView: View {
         }
         .sheet(isPresented: $showColorSheet) {
             DeckColorSheet(deck: deck)
+        }
+        .sheet(item: $shareKind) { kind in
+            DeckShareSheet(deck: deck, kind: kind)
         }
         .confirmationDialog("¿Eliminar \(deck.name)?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Eliminar deck", role: .destructive) {
@@ -262,6 +266,12 @@ struct DeckDetailView: View {
                         for entry in deck.mainEntries { entry.ownedQuantity = 0 }
                         try? context.save()
                     } label: { Label("Reiniciar conteo", systemImage: "arrow.counterclockwise") }
+                }
+                Section("Compartir imagen") {
+                    Button { shareKind = .full } label: { Label("Deck completo", systemImage: "square.and.arrow.up") }
+                        .disabled(deck.mainEntries.isEmpty)
+                    Button { shareKind = .missing } label: { Label("Lo que me falta", systemImage: "cart") }
+                        .disabled(!deck.mainEntries.contains { $0.missingQuantity > 0 })
                 }
                 Section("Precios") {
                     Button { Task { await updatePrices(switchToCheapest: false) } } label: {

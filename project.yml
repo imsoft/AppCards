@@ -53,6 +53,7 @@ targets:
           NSAllowsLocalNetworking: true
         SupabaseAnonKey: $(SUPABASE_ANON_KEY)
         NSCameraUsageDescription: Para leer el número o nombre de la carta y buscar su precio.
+        NSPhotoLibraryAddUsageDescription: Para guardar en tus fotos la imagen de un deck que quieras compartir.
     # iCloud desactivado: el Personal Team gratuito no permite CloudKit.
     # Para activarlo con una cuenta de paga, restaura este bloque:
     # entitlements:

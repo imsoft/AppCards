@@ -50,6 +50,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Para leer el número o nombre de la carta y buscar su precio.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Para guardar en tus fotos la imagen de un deck que quieras compartir.</string>
 	<key>SupabaseAnonKey</key>
 	<string>$(SUPABASE_ANON_KEY)</string>
 	<key>SupabaseHost</key>
