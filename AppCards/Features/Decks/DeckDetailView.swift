@@ -52,8 +52,14 @@ struct DeckDetailView: View {
 
     private var alternativesTotal: Double {
         alternatives.reduce(0) { sum, entry in
-            sum + (entry.unitPrice.flatMap { model.converted($0 * Double(entry.quantity), from: entry.currency) } ?? 0)
+            sum + (entry.unitPrice.flatMap { model.converted($0 * Double(entry.missingQuantity), from: entry.currency) } ?? 0)
         }
+    }
+
+    /// Copias de tu colección que puede usar esta carta. Las opciones no compiten con el deck: ven todo lo que tienes.
+    private func inCollection(_ entry: DeckEntry) -> Int {
+        if entry.isAlternative { return min(ownedInCollection[entry.line.canonicalKey] ?? 0, entry.quantity) }
+        return coveredByEntry[entry.persistentModelID] ?? 0
     }
 
     private var collectionCanFill: Bool {
@@ -98,7 +104,7 @@ struct DeckDetailView: View {
                 } footer: {
                     if !alternatives.isEmpty {
                         HStack(spacing: 4) {
-                            Text("No cuentan en el total. Comprarlas todas:")
+                            Text("No cuentan en el total. Te faltaría comprar:")
                             MoneyText(amount: alternativesTotal, currency: model.displayCurrency, font: .footnote.weight(.semibold), tagSize: .small)
                         }
                     }
@@ -113,7 +119,7 @@ struct DeckDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
         .sheet(item: $editing) { entry in
-            DeckEntryEditSheet(entry: entry, color: accent, inCollection: coveredByEntry[entry.persistentModelID] ?? 0)
+            DeckEntryEditSheet(entry: entry, color: accent, inCollection: inCollection(entry))
         }
         .sheet(isPresented: $showColorSheet) {
             DeckColorSheet(deck: deck)

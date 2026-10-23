@@ -50,7 +50,18 @@ final class SubstitutionUITests: XCTestCase {
         link.tap()
         let swap = app.buttons["do-substitution"]
         XCTAssertTrue(swap.waitForExistence(timeout: 5))
+
+        // En la sustitución también se puede poner cuántas quieres y cuántas tienes.
+        let wanted = app.steppers.firstMatch
+        let owned = app.steppers["owned-stepper"]
+        if !owned.isHittable { app.swipeUp() }
+        XCTAssertTrue(owned.waitForExistence(timeout: 5), "La opción no tiene el contador de 'Tengo'")
+        for _ in 0..<3 { wanted.buttons.element(boundBy: 1).tap() }
+        for _ in 0..<2 { owned.buttons.element(boundBy: 1).tap() }
+        XCTAssertEqual(owned.value as? String, "2")
         shot(app, "2-hoja")
+        app.swipeDown(velocity: .slow)
+        if !swap.isHittable { app.swipeDown() }
         swap.tap()
         sleep(2)
         shot(app, "3-cambiado")

@@ -78,9 +78,7 @@ struct DeckEntryRow: View {
 
             Spacer(minLength: 4)
 
-            if !entry.isAlternative {
-                counter
-            }
+            counter
         }
         .padding(.vertical, 6)
     }
@@ -88,7 +86,7 @@ struct DeckEntryRow: View {
     @ViewBuilder
     private var priceLine: some View {
         if let unit = entry.unitPrice {
-            let pending = entry.isAlternative ? entry.quantity : entry.missingQuantity
+            let pending = entry.missingQuantity
             VStack(alignment: .leading, spacing: 1) {
                 if pending > 1 {
                     // Total de lo que falta en tu moneda y, abajo, el precio por unidad.
@@ -150,15 +148,13 @@ struct DeckEntryTile: View {
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .opacity(entry.missingQuantity == 0 && !entry.isAlternative ? 1 : 0.92)
+            .opacity(entry.missingQuantity == 0 ? 1 : 0.92)
             .shadow(color: color.opacity(0.3), radius: 5, y: 3)
             .overlay(alignment: .topTrailing) {
-                if !entry.isAlternative {
-                    OwnershipRing(owned: entry.ownedQuantity, wanted: entry.quantity, color: color, size: 30)
-                        .padding(4)
-                        .background(.regularMaterial, in: Circle())
-                        .padding(4)
-                }
+                OwnershipRing(owned: entry.ownedQuantity, wanted: entry.quantity, color: color, size: 30)
+                    .padding(4)
+                    .background(.regularMaterial, in: Circle())
+                    .padding(4)
             }
             .overlay(alignment: .topLeading) {
                 CopiesBadge(count: entry.quantity, color: color, large: true)
@@ -264,22 +260,25 @@ struct DeckEntryEditSheet: View {
                     Stepper(value: $entry.quantity, in: 1...99) {
                         LabeledContent("Quiero", value: "\(entry.quantity)")
                     }
-                    if !entry.isAlternative {
-                        Stepper(value: $entry.ownedQuantity, in: 0...entry.quantity) {
-                            HStack {
-                                Text("Tengo")
-                                Spacer()
-                                OwnershipRing(owned: entry.ownedQuantity, wanted: entry.quantity, color: color, size: 30)
-                            }
+                    Stepper(value: $entry.ownedQuantity, in: 0...entry.quantity) {
+                        HStack {
+                            Text("Tengo")
+                            Spacer()
+                            OwnershipRing(owned: entry.ownedQuantity, wanted: entry.quantity, color: color, size: 30)
                         }
-                        if inCollection > entry.ownedQuantity {
-                            Button("Usar las \(min(inCollection, entry.quantity)) de mi colección") {
-                                entry.ownedQuantity = min(inCollection, entry.quantity)
-                            }
+                    }
+                    .accessibilityIdentifier("owned-stepper")
+                    if inCollection > entry.ownedQuantity {
+                        Button("Usar las \(min(inCollection, entry.quantity)) de mi colección") {
+                            entry.ownedQuantity = min(inCollection, entry.quantity)
                         }
                     }
                 } header: {
                     Text("Copias")
+                } footer: {
+                    if entry.isAlternative {
+                        Text("Si haces el cambio, la carta entra al deck con estas copias.")
+                    }
                 }
 
                 Section {
