@@ -13,7 +13,21 @@ struct DeckShareCard: Identifiable {
     let id: String
     let name: String
     let copies: Int
+    /// Expansión y número, por ejemplo "OP15-001" o "TRK #1704".
+    let code: String
     let image: UIImage?
+
+    static func code(game: Game, setName: String, number: String) -> String {
+        if game == .onePiece { return number }
+        // "Star Trek (TRK)" → "TRK"; si no hay código entre paréntesis, el nombre del set.
+        let set: String
+        if let open = setName.lastIndex(of: "("), let close = setName.lastIndex(of: ")"), open < close {
+            set = String(setName[setName.index(after: open)..<close])
+        } else {
+            set = setName
+        }
+        return [set, number.isEmpty ? "" : "#\(number)"].filter { !$0.isEmpty }.joined(separator: " ")
+    }
 }
 
 /// Arma la imagen del deck: baja las imágenes de las cartas y las dibuja en una sola foto.
@@ -29,10 +43,11 @@ enum DeckShareRenderer {
             .sorted { $0.0.name.localizedCaseInsensitiveCompare($1.0.name) == .orderedAscending }
     }
 
-    static func render(deck: Deck, kind: DeckShareKind, model: AppModel) async -> UIImage? {
+    static func render(deck: Deck, kind: DeckShareKind) async -> UIImage? {
         let picked = cards(for: deck, kind: kind)
         let requests = picked.map { (id: $0.entry.syncID.isEmpty ? UUID().uuidString : $0.entry.syncID,
                                      name: $0.entry.name, copies: $0.copies,
+                                     code: DeckShareCard.code(game: $0.entry.game, setName: $0.entry.setName, number: $0.entry.number),
                                      url: $0.entry.imageURL, fallback: $0.entry.artworkFallback) }
 
         let images = await withTaskGroup(of: (Int, UIImage?).self) { group in
@@ -50,12 +65,9 @@ enum DeckShareRenderer {
             return result
         }
         let shareCards = requests.enumerated().map { index, request in
-            DeckShareCard(id: request.id, name: request.name, copies: request.copies, image: images[index])
+            DeckShareCard(id: request.id, name: request.name, copies: request.copies, code: request.code, image: images[index])
         }
 
-        let amount = picked.reduce(0.0) { sum, item in
-            sum + (item.entry.unitPrice.flatMap { model.converted($0 * Double(item.copies), from: item.entry.currency) } ?? 0)
-        }
         let view = DeckShareView(
             deckName: deck.name,
             game: deck.game,
@@ -63,8 +75,7 @@ enum DeckShareRenderer {
             foreground: deck.accentForeground,
             kind: kind,
             cards: shareCards,
-            totalCopies: picked.reduce(0) { $0 + $1.copies },
-            amount: MoneyFormatter.string(amount, currency: model.displayCurrency)
+            totalCopies: picked.reduce(0) { $0 + $1.copies }
         )
         let renderer = ImageRenderer(content: view.frame(width: width))
         renderer.scale = 2
@@ -81,7 +92,6 @@ struct DeckShareView: View {
     let kind: DeckShareKind
     let cards: [DeckShareCard]
     let totalCopies: Int
-    let amount: String
 
     private var columns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: 10), count: cards.count > 20 ? 5 : 4)
@@ -134,19 +144,8 @@ struct DeckShareView: View {
                 .font(.system(.largeTitle, design: .rounded).weight(.heavy))
                 .lineLimit(2)
                 .minimumScaleFactor(0.6)
-            HStack(alignment: .firstTextBaseline) {
-                Text("\(totalCopies) \(totalCopies == 1 ? "carta" : "cartas")")
-                    .font(.headline)
-                Spacer()
-                VStack(alignment: .trailing, spacing: 0) {
-                    Text(kind == .full ? "Valor del deck" : "Me falta comprar")
-                        .font(.caption.weight(.semibold))
-                        .opacity(0.85)
-                    Text(amount)
-                        .font(.system(.title2, design: .rounded).weight(.bold))
-                        .monospacedDigit()
-                }
-            }
+            Text("\(totalCopies) \(totalCopies == 1 ? "carta" : "cartas")\(kind == .missing ? " por conseguir" : "")")
+                .font(.headline)
         }
         .foregroundStyle(foreground)
         .padding(18)
@@ -184,10 +183,17 @@ struct DeckShareView: View {
                         .padding(4)
                 }
             }
-            Text(card.name)
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.85))
-                .lineLimit(1)
+            VStack(spacing: 1) {
+                Text(card.code)
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Text(card.name)
+                    .font(.system(size: 8, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .lineLimit(1)
+            }
         }
     }
 }
@@ -196,7 +202,6 @@ struct DeckShareView: View {
 struct DeckShareSheet: View {
     let deck: Deck
     @State var kind: DeckShareKind
-    @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @State private var image: UIImage?
     @State private var isRendering = true
@@ -241,7 +246,7 @@ struct DeckShareSheet: View {
             }
             .task(id: kind) {
                 isRendering = true
-                image = await DeckShareRenderer.render(deck: deck, kind: kind, model: model)
+                image = await DeckShareRenderer.render(deck: deck, kind: kind)
                 isRendering = false
             }
         }
