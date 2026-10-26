@@ -33,7 +33,7 @@ struct DeckShareCard: Identifiable {
 /// Arma la imagen del deck: baja las imágenes de las cartas y las dibuja en una sola foto.
 @MainActor
 enum DeckShareRenderer {
-    /// Ancho de la imagen en puntos; con escala 2 sale de 1080 px, el ancho de Instagram.
+    /// Ancho de la imagen en puntos.
     static let width: CGFloat = 540
 
     static func cards(for deck: Deck, kind: DeckShareKind) -> [(entry: DeckEntry, copies: Int)] {
@@ -78,7 +78,8 @@ enum DeckShareRenderer {
             totalCopies: picked.reduce(0) { $0 + $1.copies }
         )
         let renderer = ImageRenderer(content: view.frame(width: width))
-        renderer.scale = 2
+        // Escala 3 (1620 px): se ve nítida al hacer zoom en la vista previa.
+        renderer.scale = 3
         return renderer.uiImage
     }
 }
@@ -208,28 +209,30 @@ struct DeckShareSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    Picker("Qué compartir", selection: $kind) {
-                        ForEach(DeckShareKind.allCases) { Text($0.title).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .accessibilityIdentifier("share-kind")
-
-                    if let image, !isRendering {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .shadow(color: .black.opacity(0.2), radius: 12, y: 6)
-                            .accessibilityIdentifier("share-preview")
-                    } else {
-                        ProgressView("Preparando imagen…")
-                            .frame(maxWidth: .infinity, minHeight: 300)
-                    }
+            VStack(spacing: 10) {
+                Picker("Qué compartir", selection: $kind) {
+                    ForEach(DeckShareKind.allCases) { Text($0.title).tag($0) }
                 }
-                .padding(Theme.screenPadding)
+                .pickerStyle(.segmented)
+                .accessibilityIdentifier("share-kind")
+                .padding(.horizontal, Theme.screenPadding)
+
+                if let image, !isRendering {
+                    ZoomableImage(image: image)
+                        .accessibilityElement()
+                        .accessibilityAddTraits(.isImage)
+                        .accessibilityLabel("Vista previa de la imagen")
+                        .accessibilityIdentifier("share-preview")
+                    Label("Pellizca o toca dos veces para hacer zoom", systemImage: "hand.pinch")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ProgressView("Preparando imagen…")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
             }
+            .padding(.top, 8)
+            .padding(.bottom, 12)
             .navigationTitle("Compartir deck")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -251,5 +254,102 @@ struct DeckShareSheet: View {
             }
         }
         .sheetSize()
+    }
+}
+
+/// Imagen con zoom: pellizcar para acercar y moverse; doble toque acerca ahí o regresa al tamaño completo.
+struct ZoomableImage: UIViewRepresentable {
+    let image: UIImage
+    var maxZoom: CGFloat = 5
+
+    /// Recalcula el ajuste cada vez que cambia su tamaño (al aparecer o al girar).
+    final class LayoutScrollView: UIScrollView {
+        var onLayout: ((UIScrollView) -> Void)?
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            onLayout?(self)
+        }
+    }
+
+    func makeUIView(context: Context) -> LayoutScrollView {
+        let scroll = LayoutScrollView()
+        scroll.onLayout = { [weak coordinator = context.coordinator] in coordinator?.layout(in: $0) }
+        scroll.delegate = context.coordinator
+        scroll.minimumZoomScale = 1
+        scroll.maximumZoomScale = maxZoom
+        scroll.bouncesZoom = true
+        scroll.showsHorizontalScrollIndicator = false
+        scroll.showsVerticalScrollIndicator = false
+        scroll.contentInsetAdjustmentBehavior = .never
+
+        let imageView = UIImageView(image: image)
+        imageView.contentMode = .scaleAspectFit
+        imageView.layer.cornerRadius = 12
+        imageView.layer.cornerCurve = .continuous
+        imageView.clipsToBounds = true
+        scroll.addSubview(imageView)
+        context.coordinator.imageView = imageView
+
+        let doubleTap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.doubleTapped(_:)))
+        doubleTap.numberOfTapsRequired = 2
+        scroll.addGestureRecognizer(doubleTap)
+        return scroll
+    }
+
+    func updateUIView(_ scroll: LayoutScrollView, context: Context) {
+        guard let imageView = context.coordinator.imageView else { return }
+        if imageView.image !== image {
+            imageView.image = image
+            scroll.setZoomScale(1, animated: false)
+            context.coordinator.reset()
+            scroll.setNeedsLayout()
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    final class Coordinator: NSObject, UIScrollViewDelegate {
+        weak var imageView: UIImageView?
+        private var lastBounds: CGSize = .zero
+
+        func reset() { lastBounds = .zero }
+
+        /// Ajusta la imagen al espacio disponible (a escala 1) y la centra.
+        func layout(in scroll: UIScrollView) {
+            guard let imageView, let image = imageView.image, scroll.bounds.size != .zero else { return }
+            if scroll.bounds.size != lastBounds {
+                lastBounds = scroll.bounds.size
+                let zoom = scroll.zoomScale
+                scroll.zoomScale = 1
+                let fit = min(scroll.bounds.width / image.size.width, scroll.bounds.height / image.size.height)
+                imageView.frame = CGRect(x: 0, y: 0, width: image.size.width * fit, height: image.size.height * fit)
+                scroll.contentSize = imageView.frame.size
+                scroll.zoomScale = zoom
+            }
+            center(in: scroll)
+        }
+
+        private func center(in scroll: UIScrollView) {
+            guard let imageView else { return }
+            let x = max((scroll.bounds.width - imageView.frame.width) / 2, 0)
+            let y = max((scroll.bounds.height - imageView.frame.height) / 2, 0)
+            scroll.contentInset = UIEdgeInsets(top: y, left: x, bottom: y, right: x)
+        }
+
+        func viewForZooming(in scrollView: UIScrollView) -> UIView? { imageView }
+
+        func scrollViewDidZoom(_ scrollView: UIScrollView) { center(in: scrollView) }
+
+        @objc func doubleTapped(_ gesture: UITapGestureRecognizer) {
+            guard let scroll = gesture.view as? UIScrollView, let imageView else { return }
+            if scroll.zoomScale > 1.01 {
+                scroll.setZoomScale(1, animated: true)
+            } else {
+                let point = gesture.location(in: imageView)
+                let scale: CGFloat = 3
+                let size = CGSize(width: scroll.bounds.width / scale, height: scroll.bounds.height / scale)
+                scroll.zoom(to: CGRect(x: point.x - size.width / 2, y: point.y - size.height / 2, width: size.width, height: size.height), animated: true)
+            }
+        }
     }
 }

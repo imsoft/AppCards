@@ -36,6 +36,15 @@ final class DeckShareUITests: XCTestCase {
         shot(app, "1-deck-completo")
 
         XCTAssertTrue(app.buttons["share-button"].exists)
+
+        // Zoom: doble toque acerca, pellizcar también.
+        preview.doubleTap()
+        sleep(1)
+        shot(app, "1b-zoom")
+        preview.doubleTap()
+        preview.pinch(withScale: 2.5, velocity: 2)
+        sleep(1)
+        shot(app, "1c-pellizco")
         app.buttons["Cerrar"].tap()
         sleep(1)
 
