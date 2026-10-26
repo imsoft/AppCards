@@ -18,6 +18,7 @@ struct DeckDetailView: View {
     @State private var dropTarget: DropZone?
     @State private var confirmDelete = false
     @State private var shareKind: DeckShareKind?
+    @State private var swipeGroup = SwipeGroup()
     @Environment(\.dismiss) private var dismiss
 
     /// Zona sobre la que se está arrastrando una carta.
@@ -114,6 +115,7 @@ struct DeckDetailView: View {
             .padding(.top, 8)
             .padding(.bottom, 40)
         }
+        .environment(\.swipeGroup, swipeGroup)
         .background(ScreenBackground(color: accent))
         .navigationTitle(deck.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -314,7 +316,11 @@ struct DeckDetailView: View {
                     .draggable(entry.syncID) {
                         DragPreview(entry: entry, color: accent)
                     }
-                    .accessibilityAction(named: entry.isAlternative ? "Mover al deck" : "Mover a opciones") { toggleAlternative(entry) }
+                    .swipeOptions(id: entry.persistentModelID,
+                                  leading: leadingActions(entry),
+                                  trailing: trailingActions(entry),
+                                  cornerRadius: 0, spacing: 0,
+                                  contentBackground: Color(.secondarySystemGroupedBackground))
                 if index < entries.count - 1 {
                     Divider().padding(.leading, 84)
                 }
@@ -365,6 +371,47 @@ struct DeckDetailView: View {
         try? context.save()
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         model.showToast("Cambiaste \(target.name) por \(option.name)")
+    }
+
+    /// Deslizar a la derecha: lo que tienes (y hacer el cambio si es sustituto).
+    private func leadingActions(_ entry: DeckEntry) -> [SwipeAction] {
+        var actions: [SwipeAction] = []
+        if entry.isAlternative, DeckSubstitution.target(of: entry, in: deck.entryList) != nil {
+            actions.append(SwipeAction(title: "Hacer cambio", systemImage: "arrow.triangle.2.circlepath", tint: accent) { doSwap(entry) })
+        }
+        if entry.missingQuantity > 0 {
+            actions.append(SwipeAction(title: "Tengo todas", systemImage: "checkmark.circle.fill", tint: Theme.positive) {
+                withAnimation(Motion.snappy) { entry.ownedQuantity = entry.quantity }
+                try? context.save()
+            })
+        } else {
+            actions.append(SwipeAction(title: "No tengo", systemImage: "circle.dashed", tint: .gray) {
+                withAnimation(Motion.snappy) { entry.ownedQuantity = 0 }
+                try? context.save()
+            })
+        }
+        return actions
+    }
+
+    /// Deslizar a la izquierda: mover de sección o quitar.
+    private func trailingActions(_ entry: DeckEntry) -> [SwipeAction] {
+        [
+            SwipeAction(title: entry.isAlternative ? "Al deck" : "A opciones",
+                        systemImage: entry.isAlternative ? "arrow.up.square.fill" : "arrow.triangle.swap",
+                        tint: .orange) { toggleAlternative(entry) },
+            SwipeAction(title: "Quitar", systemImage: "trash.fill", tint: .red) { remove(entry) },
+        ]
+    }
+
+    private func remove(_ entry: DeckEntry) {
+        let name = entry.name
+        // Espera a que se cierren las opciones antes de borrar la fila.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            guard !entry.isGone else { return }
+            withAnimation(Motion.spring) { context.delete(entry) }
+            try? context.save()
+            model.showToast("\(name) quitada del deck")
+        }
     }
 
     private func toggleAlternative(_ entry: DeckEntry) {

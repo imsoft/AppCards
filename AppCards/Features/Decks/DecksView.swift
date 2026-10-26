@@ -8,6 +8,9 @@ struct DecksView: View {
     @State private var showNewDeck = false
     @State private var showImport = false
     @State private var deckToDelete: Deck?
+    @State private var shareDeck: Deck?
+    @State private var colorDeck: Deck?
+    @State private var swipeGroup = SwipeGroup()
 
     var body: some View {
         AdaptiveSplitView(for: Deck.self) { deck in
@@ -32,6 +35,11 @@ struct DecksView: View {
                             DeckCard(deck: deck)
                         }
                         .buttonStyle(PressableStyle())
+                        .swipeOptions(id: deck.persistentModelID, trailing: [
+                            SwipeAction(title: "Color", systemImage: "paintpalette.fill", tint: deck.accentColor) { colorDeck = deck },
+                            SwipeAction(title: "Compartir", systemImage: "square.and.arrow.up", tint: .blue) { shareDeck = deck },
+                            SwipeAction(title: "Eliminar", systemImage: "trash.fill", tint: .red) { deckToDelete = deck },
+                        ])
                         .staggeredAppear(index: index + 1)
                         .contextMenu {
                             Button(role: .destructive) { deckToDelete = deck } label: {
@@ -44,6 +52,7 @@ struct DecksView: View {
                 .padding(.vertical, 12)
                 .padding(.bottom, 40)
             }
+            .environment(\.swipeGroup, swipeGroup)
             .background(ScreenBackground())
             .navigationTitle("Decks")
             .navigationBarTitleDisplayMode(.inline)
@@ -54,6 +63,8 @@ struct DecksView: View {
                 }
             }
             .sheet(isPresented: $showNewDeck) { NewDeckSheet() }
+            .sheet(item: $shareDeck) { DeckShareSheet(deck: $0, kind: .full) }
+            .sheet(item: $colorDeck) { DeckColorSheet(deck: $0) }
             .confirmationDialog("¿Eliminar \(deckToDelete?.name ?? "deck")?", isPresented: Binding(get: { deckToDelete != nil }, set: { if !$0 { deckToDelete = nil } }), titleVisibility: .visible) {
                 Button("Eliminar deck", role: .destructive) {
                     if let deck = deckToDelete, !deck.isGone {
