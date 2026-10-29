@@ -174,15 +174,16 @@ struct DeckShareView: View {
                 .aspectRatio(0.716, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
 
-                if card.copies > 1 {
-                    Text("×\(card.copies)")
-                        .font(.caption.weight(.heavy))
-                        .monospacedDigit()
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(Color.black.opacity(0.8), in: Capsule())
-                        .padding(4)
-                }
+                // Copias grandes y con los colores del deck, para que se lean de lejos.
+                Text("×\(card.copies)")
+                    .font(.system(size: 22, weight: .black, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(foreground)
+                    .padding(.horizontal, 9).padding(.vertical, 3)
+                    .background(DeckColors.gradient(colors), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(.white, lineWidth: 2.5))
+                    .shadow(color: .black.opacity(0.55), radius: 4, y: 2)
+                    .offset(x: 6, y: 6)
             }
             VStack(spacing: 1) {
                 Text(card.code)
