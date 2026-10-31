@@ -23,12 +23,22 @@ final class DeckShareUITests: XCTestCase {
         XCTAssertTrue(deck.waitForExistence(timeout: 10))
         deck.tap()
 
+        // Una carta a opciones, para que salga en su propia sección.
+        let nami = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Nami'")).firstMatch
+        XCTAssertTrue(nami.waitForExistence(timeout: 10))
+        nami.swipeLeft()
+        let toOptions = app.buttons.matching(NSPredicate(format: "identifier == 'swipe-A opciones' OR label == 'A opciones'")).firstMatch
+        XCTAssertTrue(toOptions.waitForExistence(timeout: 3))
+        toOptions.tap()
+        sleep(1)
+
         // Marcar todo y luego quitar algunas para que haya faltantes.
         app.buttons["deck-menu"].tap()
         app.buttons["Marcar todo como que lo tengo"].tap()
         sleep(1)
         app.buttons["deck-menu"].tap()
-        XCTAssertFalse(app.buttons["Lo que me falta"].isEnabled, "Con todo marcado no hay faltantes")
+        // Las opciones no se marcan con "Marcar todo", así que todavía hay faltantes.
+        XCTAssertTrue(app.buttons["Lo que me falta"].isEnabled)
         app.buttons["Deck completo"].tap()
         let preview = app.images["share-preview"]
         XCTAssertTrue(preview.waitForExistence(timeout: 60), "No se generó la imagen")
@@ -36,6 +46,15 @@ final class DeckShareUITests: XCTestCase {
         shot(app, "1-deck-completo")
 
         XCTAssertTrue(app.buttons["share-button"].exists)
+
+        // Tocar una carta de la vista previa la abre en el visor.
+        preview.coordinate(withNormalizedOffset: CGVector(dx: 0.16, dy: 0.3)).tap()
+        let viewer = app.descendants(matching: .any).matching(identifier: "card-viewer-card").firstMatch
+        XCTAssertTrue(viewer.waitForExistence(timeout: 5), "Tocar la carta no abrió el visor")
+        sleep(1)
+        shot(app, "1a-visor")
+        app.buttons["Cerrar"].firstMatch.tap()
+        sleep(1)
 
         // Zoom: doble toque acerca, pellizcar también.
         preview.doubleTap()

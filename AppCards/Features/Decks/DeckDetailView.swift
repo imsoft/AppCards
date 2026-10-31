@@ -277,9 +277,9 @@ struct DeckDetailView: View {
                 }
                 Section("Compartir imagen") {
                     Button { shareKind = .full } label: { Label("Deck completo", systemImage: "square.and.arrow.up") }
-                        .disabled(deck.mainEntries.isEmpty)
+                        .disabled(deck.entryList.isEmpty)
                     Button { shareKind = .missing } label: { Label("Lo que me falta", systemImage: "cart") }
-                        .disabled(!deck.mainEntries.contains { $0.missingQuantity > 0 })
+                        .disabled(!deck.entryList.contains { $0.missingQuantity > 0 })
                 }
                 Section("Precios") {
                     Button { Task { await updatePrices(switchToCheapest: false) } } label: {
