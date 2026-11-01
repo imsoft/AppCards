@@ -57,7 +57,9 @@ struct OnePieceCatalog: Codable, Sendable {
 
         let entries: [Entry] = products.compactMap { product in
             // Solo cartas sueltas: boosters, cajas y decks no tienen número.
-            guard let number = product.extended("Number"), !number.isEmpty else { return nil }
+            // Las cartas DON!! tampoco traen número; todas cuentan como impresiones de la misma carta, "DON".
+            let isDon = product.extended("CardType") == Self.donType
+            guard let number = isDon ? Self.donNumber : product.extended("Number"), !number.isEmpty else { return nil }
 
             let attributes = attributeLabels.compactMap { key, label -> CardAttribute? in
                 guard let value = product.extended(key)?.strippingHTML(), !value.isEmpty else { return nil }
@@ -104,9 +106,12 @@ struct OnePieceCatalog: Codable, Sendable {
         return OnePieceCatalog(builtAt: .now, sets: sets, entries: entries)
     }
 
+    static let donType = "DON!!"
+    static let donNumber = "DON"
+
     static let colors: [FilterOption] = ["Red", "Green", "Blue", "Purple", "Black", "Yellow"].map { FilterOption(id: $0, title: $0) }
     static let attributes: [FilterOption] = ["Slash", "Strike", "Ranged", "Special", "Wisdom"].map { FilterOption(id: $0, title: $0) }
-    static let cardTypes: [FilterOption] = ["Leader", "Character", "Event", "Stage"].map { FilterOption(id: $0, title: $0) }
+    static let cardTypes: [FilterOption] = ["Leader", "Character", "Event", "Stage", donType].map { FilterOption(id: $0, title: $0) }
     static let rarities: [FilterOption] = [
         .init(id: "L", title: "Leader (L)"), .init(id: "C", title: "Común (C)"), .init(id: "UC", title: "Infrecuente (UC)"),
         .init(id: "R", title: "Rara (R)"), .init(id: "SR", title: "Super rara (SR)"), .init(id: "SEC", title: "Secreta (SEC)"),

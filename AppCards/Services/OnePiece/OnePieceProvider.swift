@@ -16,7 +16,7 @@ actor OnePieceProvider: CardProvider {
 
     static var defaultCacheURL: URL {
         let dir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
-        return dir.appendingPathComponent("onepiece-catalog.json")
+        return dir.appendingPathComponent("onepiece-catalog-v2.json") // v2: incluye cartas DON!!
     }
 
     init(client: HTTPClient, cacheURL: URL = OnePieceProvider.defaultCacheURL, maxAge: TimeInterval = 24 * 60 * 60) {
