@@ -19,6 +19,7 @@ struct SearchView: View {
     @State private var deckTarget: CardDetail?
     @State private var wishTarget: CardDetail?
     @State private var viewerCard: CardSummary?
+    @State private var priceBackfill = SearchPriceBackfill()
 
     private struct SearchKey: Equatable {
         let game: Game
@@ -45,12 +46,20 @@ struct SearchView: View {
 
                 let index = ownership
                 CardGrid(items: results) { card in
+                    let filled = priceBackfill.price(for: card)
                     NavigationLink(value: card) {
-                        CardGridTile(card: card, owned: index.owned(card), wished: index.isWished(card)) {
+                        CardGridTile(card: card, owned: index.owned(card), wished: index.isWished(card),
+                                     price: filled?.amount, priceCurrency: filled?.currency) {
                             Task { await addToCollection(card) }
                         }
                     }
                     .buttonStyle(PressableStyle())
+                    .task(id: card.id) {
+                        // Pokémon: la lista no trae precios; se piden al aparecer la carta.
+                        if card.game == .pokemon {
+                            await priceBackfill.load(card, using: model.provider(for: .pokemon))
+                        }
+                    }
                     .contextMenu {
                         Button { viewerCard = card } label: { Label("Ver carta completa", systemImage: "arrow.up.left.and.arrow.down.right") }
                         Button { Task { await addToCollection(card) } } label: { Label("+1 colección", systemImage: "plus.square.on.square") }

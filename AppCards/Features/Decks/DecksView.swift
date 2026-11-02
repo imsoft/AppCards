@@ -11,6 +11,17 @@ struct DecksView: View {
     @State private var shareDeck: Deck?
     @State private var colorDeck: Deck?
     @State private var swipeGroup = SwipeGroup()
+    @State private var gameFilter: Game?
+    @State private var query = ""
+
+    /// Decks del juego elegido y que coinciden con lo escrito en la búsqueda.
+    private var filteredDecks: [Deck] {
+        let needle = query.trimmingCharacters(in: .whitespaces)
+        return decks.filter { deck in
+            (gameFilter == nil || deck.game == gameFilter)
+                && (needle.isEmpty || deck.name.localizedStandardContains(needle))
+        }
+    }
 
     var body: some View {
         AdaptiveSplitView(for: Deck.self) { deck in
@@ -18,10 +29,22 @@ struct DecksView: View {
         } empty: {
             SplitPlaceholder(title: "Elige un deck", message: "Toca un deck para ver qué tienes y cuánto te falta comprar.")
         } primary: {
+            VStack(spacing: 0) {
+            if !decks.isEmpty {
+                GameSelector(selection: $gameFilter, allowsAll: true)
+            }
             ScrollView {
                 VStack(spacing: 16) {
                     summary
                         .floatIn()
+                    if !decks.isEmpty && filteredDecks.isEmpty {
+                        EmptyStateView(
+                            title: "Ningún deck coincide",
+                            message: "No tienes decks \(gameFilter.map { "de \($0.title)" } ?? "")\(query.isEmpty ? "" : " que se llamen \"\(query)\"").",
+                            color: .gray
+                        )
+                        .padding(.top, 24)
+                    }
                     if decks.isEmpty {
                         EmptyStateView(
                             title: "Sin decks todavía",
@@ -30,7 +53,7 @@ struct DecksView: View {
                         )
                         .padding(.top, 40)
                     }
-                    ForEach(Array(decks.enumerated()), id: \.element.persistentModelID) { index, deck in
+                    ForEach(Array(filteredDecks.enumerated()), id: \.element.persistentModelID) { index, deck in
                         ItemLink(value: deck) {
                             DeckCard(deck: deck)
                         }
@@ -53,7 +76,10 @@ struct DecksView: View {
                 .padding(.bottom, 40)
             }
             .environment(\.swipeGroup, swipeGroup)
-            .background(ScreenBackground())
+            }
+            .background(ScreenBackground(color: gameFilter?.color ?? .vaultBlue))
+            .animation(Motion.gentle, value: gameFilter)
+            .searchable(text: $query, prompt: "Buscar deck")
             .navigationTitle("Decks")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -83,14 +109,15 @@ struct DecksView: View {
 
 extension DecksView {
     private var summary: some View {
-        let totals = decks.map { DeckMath.total(lines: $0.lines, in: model.displayCurrency, converter: model.converter) }
+        let shown = filteredDecks
+        let totals = shown.map { DeckMath.total(lines: $0.lines, in: model.displayCurrency, converter: model.converter) }
         let missing = totals.reduce(0) { $0 + $1.missingAmount }
         let complete = totals.filter { $0.totalCards > 0 && $0.missingCards == 0 }.count
         return SummaryCard(
-            title: "Te falta comprar en todos tus decks",
+            title: gameFilter == nil && query.isEmpty ? "Te falta comprar en todos tus decks" : "Te falta comprar en estos decks",
             amount: missing,
             currency: model.displayCurrency,
-            pills: [("\(decks.count) \(decks.count == 1 ? "deck" : "decks")", "rectangle.stack.fill"), ("\(complete) \(complete == 1 ? "completo" : "completos")", "checkmark.circle.fill")]
+            pills: [("\(shown.count) \(shown.count == 1 ? "deck" : "decks")", "rectangle.stack.fill"), ("\(complete) \(complete == 1 ? "completo" : "completos")", "checkmark.circle.fill")]
         )
     }
 }
